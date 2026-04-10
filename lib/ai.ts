@@ -62,7 +62,7 @@ Your job: analyze each captured item and return a JSON response with exactly the
 - urgency: "high", "normal", or "low"
 - suggestedContextName: which of their context names this belongs to most (exact name match, or null)
 
-Return ONLY valid JSON. No preamble, no explanation.`
+Return ONLY valid JSON. No markdown, no code fences, no preamble.`
 
   const userMsg = `New capture: "${content}"
 Context tagged: ${contextName}
@@ -76,7 +76,7 @@ Their other open cycles:\n${openItems || 'none yet'}`
   }
 
   try {
-    const clean = response.replace(/```json|```/g, '').trim()
+    const clean = response.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
     const parsed = JSON.parse(clean)
     console.log('[processCapture] parsed result:', parsed)
     return {
