@@ -100,7 +100,7 @@ export async function generateDigest(
 
 Generate a weekly digest. Be a mirror, not a cheerleader. Point to the patterns. Name what they've been avoiding. Celebrate what they actually closed. Tell them what the data says about where their real energy is going versus where they say it's going.
 
-Write in second person. Short paragraphs. Direct sentences. No bullet points. Max 200 words.`
+Write in second person. Short paragraphs. Direct sentences. No bullet points. Max 200 words. Only reference what is explicitly in the captures provided. Do not infer, invent, or assume context that isn't present in the data. If something isn't there, don't mention it.`
 
   const userMsg = `Here are their cycles from the past week:
 Contexts:
