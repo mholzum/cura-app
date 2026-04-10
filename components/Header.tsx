@@ -6,7 +6,7 @@ interface HeaderProps {
   instantInsight: boolean
   onToggleInsight: () => void
   onToggleContextManager: () => void
-  onSignOut: () => void
+
 }
 
 export default function Header({
@@ -15,7 +15,6 @@ export default function Header({
   instantInsight,
   onToggleInsight,
   onToggleContextManager,
-  onSignOut,
 }: HeaderProps) {
   return (
     <div
@@ -60,8 +59,6 @@ export default function Header({
           {instantInsight ? 'INSIGHT: ON' : 'INSIGHT: OFF'}
         </HeaderBtn>
         <HeaderBtn onClick={onToggleContextManager}>CONTEXTS</HeaderBtn>
-        <div className="flex-1" />
-        <HeaderBtn onClick={onSignOut}>SIGN OUT</HeaderBtn>
       </div>
     </div>
   )

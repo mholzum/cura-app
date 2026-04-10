@@ -304,7 +304,6 @@ export default function AppPage() {
         instantInsight={instantInsight}
         onToggleInsight={() => setInstantInsight(v => !v)}
         onToggleContextManager={() => setShowContextManager(v => !v)}
-        onSignOut={handleSignOut}
       />
 
       {/* Scrollable body */}

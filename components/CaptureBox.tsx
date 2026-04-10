@@ -113,7 +113,7 @@ export default function CaptureBox({
           style={{ borderTop: '1px solid var(--border)' }}
         >
           {/* Context tags */}
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
             {contexts.map(ctx => (
               <button
                 key={ctx.id}
