@@ -46,6 +46,7 @@ export async function processCapture(
   openCycles: Capture[],
   userContexts: Context[]
 ): Promise<AIInsightResult | null> {
+  console.log('[processCapture] called | content:', content.slice(0, 60), '| context:', contextName)
   const openItems = openCycles
     .slice(0, 10)
     .map(i => `- [${i.context?.name ?? ''}] ${i.content} (${formatAge(i.created_at)})`)
@@ -68,17 +69,23 @@ Context tagged: ${contextName}
 Their other open cycles:\n${openItems || 'none yet'}`
 
   const response = await callClaude(system, userMsg)
-  if (!response) return null
+  console.log('[processCapture] raw response:', response)
+  if (!response) {
+    console.error('[processCapture] callClaude returned null')
+    return null
+  }
 
   try {
     const clean = response.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
+    console.log('[processCapture] parsed result:', parsed)
     return {
       insight: parsed.insight || '',
       urgency: parsed.urgency || 'normal',
       suggestedContextName: parsed.suggestedContextName || null,
     }
-  } catch {
+  } catch (err) {
+    console.error('[processCapture] JSON parse failed:', err, '| raw:', response)
     return null
   }
 }
