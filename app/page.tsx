@@ -1,65 +1,130 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
+
+const INVITE_CODE = 'CURA2026'
+const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
+
+export default function GatePage() {
+  const router = useRouter()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function checkSession() {
+      if (DEV_MODE) {
+        router.replace('/app')
+        return
+      }
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: profile } = await supabase
+          .from('users_profile')
+          .select('archetype')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile?.archetype) {
+          router.replace('/app')
+        } else {
+          router.replace('/onboarding')
+        }
+      } else {
+        setLoading(false)
+      }
+    }
+
+    checkSession()
+  }, [router])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (code.trim().toUpperCase() !== INVITE_CODE) {
+      setError('invalid code')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+
+    const supabase = createClient()
+    const { error: signInError } = await supabase.auth.signInAnonymously()
+
+    if (signInError) {
+      setError('something went wrong. try again.')
+      setSubmitting(false)
+      return
+    }
+
+    router.replace('/onboarding')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
+          CURA
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen flex items-center justify-center px-5">
+      <div className="w-full max-w-sm">
+        <div className="mb-10 flex justify-center">
+          <svg width="160" height="52" viewBox="0 0 160 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0"  y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#c9a84c" opacity="0.5">C</text>
+            <text x="31" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#e8e4de" opacity="0.58">U</text>
+            <text x="62" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#e8e4de" opacity="0.78">R</text>
+            <text x="91" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#7a9eb5" opacity="1">A</text>
+            <line x1="2"  y1="50" x2="26"  y2="50" stroke="#c9a84c" strokeWidth="1"   opacity="0.35"/>
+            <line x1="31" y1="50" x2="58"  y2="50" stroke="#e8e4de" strokeWidth="1.2" opacity="0.36"/>
+            <line x1="62" y1="50" x2="88"  y2="50" stroke="#e8e4de" strokeWidth="1.5" opacity="0.58"/>
+            <line x1="91" y1="50" x2="128" y2="50" stroke="#7a9eb5" strokeWidth="2.5" opacity="1"/>
+          </svg>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <p className="font-mono text-xs tracking-widest mb-8 text-center" style={{ color: 'var(--muted)' }}>
+          // your personal information system
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
+            placeholder="ENTER INVITE CODE"
+            value={code}
+            onChange={e => { setCode(e.target.value); setError('') }}
+            className="font-mono text-sm tracking-widest text-center uppercase"
+            autoComplete="off"
+            autoFocus
+          />
+          {error && (
+            <p className="font-mono text-xs tracking-wider text-center" style={{ color: 'var(--warn)' }}>
+              // {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={submitting || !code.trim()}
+            className="w-full font-display text-lg tracking-widest py-3 rounded-sm transition-all disabled:opacity-40"
+            style={{ background: 'var(--accent)', color: 'var(--bg)' }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            {submitting ? 'ENTERING...' : 'ENTER →'}
+          </button>
+        </form>
+
+        <p className="font-mono text-xs mt-6 text-center" style={{ color: 'var(--muted)', opacity: 0.5 }}>
+          // by invite only
+        </p>
+      </div>
     </div>
-  );
+  )
 }
