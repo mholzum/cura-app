@@ -6,13 +6,15 @@ export const metadata: Metadata = {
   description: 'Your personal information system',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'black',
   },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   themeColor: '#0a0a0a',
 }
@@ -20,7 +22,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="h-full antialiased overflow-hidden">{children}</body>
     </html>
   )
 }

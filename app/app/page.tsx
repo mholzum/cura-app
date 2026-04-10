@@ -285,7 +285,7 @@ export default function AppPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
           CURA
         </div>
@@ -294,7 +294,10 @@ export default function AppPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-5 pb-32">
+    // Full-height column: fixed header, scrollable body
+    <div className="h-full flex flex-col relative" style={{ maxWidth: '680px', margin: '0 auto' }}>
+
+      {/* Fixed header */}
       <Header
         openCount={openCount}
         closedCount={closedCount}
@@ -304,83 +307,94 @@ export default function AppPage() {
         onSignOut={handleSignOut}
       />
 
-      {showContextManager && (
-        <ContextManager
-          contexts={contexts}
-          onAdd={handleAddContext}
-          onRemove={handleRemoveContext}
-          onUpdateDescription={handleUpdateDescription}
-          onClose={() => setShowContextManager(false)}
-        />
-      )}
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div className="px-4 pt-5 pb-10">
 
-      <CaptureBox
-        contexts={contexts}
-        activeContextId={activeContextId}
-        onSetActiveContext={setActiveContextId}
-        onCapture={handleCapture}
-      />
+          {/* Context manager (slide-in below header) */}
+          {showContextManager && (
+            <ContextManager
+              contexts={contexts}
+              onAdd={handleAddContext}
+              onRemove={handleRemoveContext}
+              onUpdateDescription={handleUpdateDescription}
+              onClose={() => setShowContextManager(false)}
+            />
+          )}
 
-      {/* Feed header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div className="font-display text-xl tracking-widest" style={{ color: 'var(--text)' }}>
-          CYCLES
-        </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          <button
-            onClick={handleDigest}
-            className="font-mono px-3 py-1.5 rounded-sm border transition-all"
-            style={{ fontSize: '10px', letterSpacing: '0.1em', background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }}
-          >
-            WEEKLY DIGEST
-          </button>
-          {(['all', 'open', 'stale', 'closed'] as Filter[]).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className="font-mono px-2.5 py-1 rounded-sm border transition-all"
-              style={{
-                fontSize: '10px',
-                letterSpacing: '0.08em',
-                background: 'transparent',
-                borderColor: filter === f ? 'var(--text)' : 'var(--border)',
-                color: filter === f ? 'var(--text)' : 'var(--muted)',
-              }}
-            >
-              {f.toUpperCase()}
-            </button>
-          ))}
+          {/* Capture box */}
+          <CaptureBox
+            contexts={contexts}
+            activeContextId={activeContextId}
+            onSetActiveContext={setActiveContextId}
+            onCapture={handleCapture}
+          />
+
+          {/* Feed header */}
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div className="font-display text-xl tracking-widest" style={{ color: 'var(--text)' }}>
+              CYCLES
+            </div>
+            <div className="flex gap-1.5 items-center flex-wrap">
+              <button
+                onClick={handleDigest}
+                className="font-mono px-2.5 py-1 rounded-sm border transition-all"
+                style={{ fontSize: '10px', letterSpacing: '0.08em', background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }}
+              >
+                DIGEST
+              </button>
+              {(['all', 'open', 'stale', 'closed'] as Filter[]).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className="font-mono px-2.5 py-1 rounded-sm border transition-all"
+                  style={{
+                    fontSize: '10px',
+                    letterSpacing: '0.08em',
+                    background: 'transparent',
+                    borderColor: filter === f ? 'var(--text)' : 'var(--border)',
+                    color: filter === f ? 'var(--text)' : 'var(--muted)',
+                  }}
+                >
+                  {f.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {digestOpen && (
+            <WeeklyDigest
+              content={digestContent}
+              loading={digestLoading}
+              onClose={() => setDigestOpen(false)}
+            />
+          )}
+
+          {/* Feed */}
+          {filtered.length === 0 ? (
+            <div className="text-center py-16" style={{ color: 'var(--muted)' }}>
+              <div className="font-display text-6xl tracking-widest mb-4" style={{ opacity: 0.2 }}>∅</div>
+              <p className="text-sm italic">
+                {filter === 'all' ? 'Nothing captured yet. Drop something above.' : `No ${filter} cycles.`}
+              </p>
+            </div>
+          ) : (
+            filtered.map(c => (
+              <CycleCard key={c.id} capture={c} onClose={handleClose} onDelete={handleDelete} />
+            ))
+          )}
+
         </div>
       </div>
-
-      {digestOpen && (
-        <WeeklyDigest
-          content={digestContent}
-          loading={digestLoading}
-          onClose={() => setDigestOpen(false)}
-        />
-      )}
-
-      {/* Feed */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16" style={{ color: 'var(--muted)' }}>
-          <div className="font-display text-6xl tracking-widest mb-4" style={{ opacity: 0.2 }}>∅</div>
-          <p className="text-sm italic">
-            {filter === 'all' ? 'Nothing captured yet.\nDrop something above.' : `No ${filter} cycles.`}
-          </p>
-        </div>
-      ) : (
-        filtered.map(c => (
-          <CycleCard key={c.id} capture={c} onClose={handleClose} onDelete={handleDelete} />
-        ))
-      )}
 
       {/* Push banner */}
       {pushMessage && (
         <div
-          className="fixed bottom-6 left-1/2 flex items-center gap-3 px-5 py-3 rounded-sm border max-w-lg w-[calc(100%-40px)]"
+          className="absolute bottom-6 left-1/2 flex items-center gap-3 px-5 py-3 rounded-sm border"
           style={{
             transform: 'translateX(-50%)',
+            width: 'calc(100% - 32px)',
+            maxWidth: '520px',
             background: 'var(--surface)',
             borderColor: 'var(--accent)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.6)',

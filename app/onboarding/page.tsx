@@ -127,7 +127,7 @@ export default function OnboardingPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
           CURA
         </div>
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-12">
+    <div className="h-full overflow-y-auto flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-lg">
 
         {step === 'archetype' && (

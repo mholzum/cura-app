@@ -68,7 +68,7 @@ export default function GatePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
           CURA
         </div>
@@ -77,7 +77,7 @@ export default function GatePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5">
+    <div className="h-full overflow-y-auto flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-10 flex justify-center">
           <svg width="160" height="52" viewBox="0 0 160 52" fill="none" xmlns="http://www.w3.org/2000/svg">
