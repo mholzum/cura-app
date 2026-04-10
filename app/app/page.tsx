@@ -33,6 +33,7 @@ export default function AppPage() {
   const [activeContextId, setActiveContextId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [instantInsight, setInstantInsight] = useState(false)
+  const instantInsightRef = useRef(false)
   const [showContextManager, setShowContextManager] = useState(false)
   const [digestOpen, setDigestOpen] = useState(false)
   const [digestContent, setDigestContent] = useState<string | null>(null)
@@ -155,7 +156,7 @@ export default function AppPage() {
       }
     }
 
-    if (instantInsight && content) {
+    if (instantInsightRef.current && content) {
       const open = captures.filter(c => c.status !== 'closed').slice(0, 10)
       const result = await processCapture(content, context?.name ?? '', open, contexts)
       if (result) {
@@ -302,7 +303,7 @@ export default function AppPage() {
         openCount={openCount}
         closedCount={closedCount}
         instantInsight={instantInsight}
-        onToggleInsight={() => setInstantInsight(v => !v)}
+        onToggleInsight={() => setInstantInsight(v => { instantInsightRef.current = !v; return !v })}
         onToggleContextManager={() => setShowContextManager(v => !v)}
       />
 
