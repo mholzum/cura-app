@@ -4,6 +4,7 @@ const PROXY_URL = 'https://mgxhxilarhtfibjtwpbc.supabase.co/functions/v1/anthrop
 const CURA_SECRET = process.env.NEXT_PUBLIC_CURA_SECRET || 'cura-proxy-secret-2026'
 
 async function callClaude(system: string, userMessage: string): Promise<string | null> {
+  console.log('[callClaude] firing POST to', PROXY_URL, '| secret present:', !!CURA_SECRET)
   try {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
@@ -18,9 +19,17 @@ async function callClaude(system: string, userMessage: string): Promise<string |
         messages: [{ role: 'user', content: userMessage }],
       }),
     })
+    console.log('[callClaude] response status:', res.status, res.statusText)
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('[callClaude] non-OK response body:', errText)
+      return null
+    }
     const data = await res.json()
+    console.log('[callClaude] parsed response:', JSON.stringify(data).slice(0, 200))
     return data?.content?.[0]?.text || null
-  } catch {
+  } catch (err) {
+    console.error('[callClaude] fetch threw:', err)
     return null
   }
 }
