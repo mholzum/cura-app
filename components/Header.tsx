@@ -21,12 +21,12 @@ export default function Header({
   return (
     <div
       className="border-b flex-shrink-0"
-      style={{ borderColor: 'var(--border)', background: 'linear-gradient(to bottom, rgba(18,10,4,0.85) 0%, rgba(18,10,4,0.6) 100%)', overflow: 'visible' }}
+      style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
     >
       {/* Row 1: logo + score */}
       <div
         className="flex items-center justify-between px-4"
-        style={{ paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '10px', overflow: 'visible' }}
+        style={{ paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '10px' }}
       >
         <LogoHeader />
 
