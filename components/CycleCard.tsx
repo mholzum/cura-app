@@ -41,22 +41,20 @@ interface CycleCardProps {
 }
 
 export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps) {
-  const borderColor =
-    capture.status === 'stale' ? 'var(--warn)' :
-    capture.status === 'closed' ? 'var(--closed)' :
-    'var(--open)'
+  const isHigh = capture.urgency === 'high' && capture.status !== 'closed'
+
+  const cardBorderLeft =
+    isHigh                          ? '2px solid #c84030' :
+    capture.status === 'stale'      ? '2px solid rgba(232,130,10,0.5)' :
+    capture.status === 'closed'     ? '2px solid rgba(60,60,60,0.2)' :
+    '2px solid rgba(200,160,80,0.4)'
 
   const statusLabel = capture.status === 'stale' ? 'STALE' : capture.status.toUpperCase()
 
-  const statusBg =
-    capture.status === 'stale'   ? 'rgba(181,105,58,0.15)'  :
-    capture.status === 'closed'  ? 'rgba(122,158,181,0.15)' :
-    'rgba(201,168,76,0.15)'
-
-  const statusColor =
-    capture.status === 'stale'  ? 'var(--warn)'   :
-    capture.status === 'closed' ? 'var(--closed)' :
-    'var(--open)'
+  const statusStyle =
+    capture.status === 'stale'  ? { background: 'rgba(232,130,10,0.12)',  color: '#e8820a', border: '1px solid rgba(232,130,10,0.25)' } :
+    capture.status === 'closed' ? { background: 'rgba(60,60,60,0.15)',    color: '#4a4a4a', border: '1px solid rgba(60,60,60,0.2)' } :
+                                  { background: 'rgba(200,160,80,0.12)',  color: '#c8a050', border: '1px solid rgba(200,160,80,0.25)' }
 
   return (
     <div
@@ -64,7 +62,7 @@ export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps
       style={{
         background: 'var(--surface)',
         borderColor: 'var(--border)',
-        borderLeft: `3px solid ${borderColor}`,
+        borderLeft: cardBorderLeft,
         opacity: capture.status === 'closed' ? 0.55 : 1,
         animation: 'slideIn 0.25s ease',
       }}
@@ -89,7 +87,7 @@ export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps
               className="mt-2.5 px-3 py-2 rounded-sm"
               style={{
                 background: 'var(--surface2)',
-                borderLeft: `2px solid ${capture.urgency === 'high' ? 'var(--warn)' : 'var(--accent)'}`,
+                borderLeft: `2px solid ${isHigh ? '#c84030' : 'var(--accent)'}`,
               }}
             >
               <div
@@ -98,7 +96,7 @@ export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps
                   fontSize: '9px',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: capture.urgency === 'high' ? 'var(--warn)' : 'var(--accent)',
+                  color: isHigh ? '#c84030' : 'var(--accent)',
                 }}
               >
                 // cura
@@ -138,14 +136,14 @@ export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps
         </span>
         <span
           className="font-mono px-2 py-0.5 rounded-sm text-xs"
-          style={{ background: statusBg, color: statusColor, fontSize: '10px', letterSpacing: '0.08em' }}
+          style={{ ...statusStyle, fontSize: '10px', letterSpacing: '0.08em' }}
         >
           {statusLabel}
         </span>
-        {capture.urgency === 'high' && (
+        {isHigh && (
           <span
             className="font-mono px-2 py-0.5 rounded-sm text-xs"
-            style={{ background: 'rgba(181,105,58,0.15)', color: 'var(--warn)', fontSize: '10px', letterSpacing: '0.08em' }}
+            style={{ background: 'rgba(200,64,48,0.12)', color: '#c84030', border: '1px solid rgba(200,64,48,0.25)', fontSize: '10px', letterSpacing: '0.08em' }}
           >
             HIGH
           </span>

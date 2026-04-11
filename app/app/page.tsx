@@ -33,6 +33,7 @@ export default function AppPage() {
   const [captures, setCaptures] = useState<Capture[]>([])
   const [activeContextId, setActiveContextId] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
+  const [contextFilter, setContextFilter] = useState<string | null>(null)
   const [instantInsight, setInstantInsight] = useState(false)
   const instantInsightRef = useRef(false)
   const [showContextManager, setShowContextManager] = useState(false)
@@ -275,15 +276,25 @@ export default function AppPage() {
   const openCount = captures.filter(c => c.status !== 'closed').length
   const closedCount = captures.filter(c => c.status === 'closed').length
 
+  const contextOptions = Array.from(new Set(
+    captures.filter(c => c.context).map(c => c.context!.name)
+  ))
+
+  const sortScore = (c: Capture) => {
+    if (c.status === 'open' && c.urgency === 'high') return 0
+    if (c.status === 'stale') return 1
+    if (c.status === 'open') return 2
+    return 3
+  }
+
   const filtered = [...captures]
     .sort((a, b) => {
-      const order: Record<string, number> = { stale: 0, open: 1, closed: 2 }
-      if (order[a.status] !== order[b.status]) return order[a.status] - order[b.status]
-      if (a.urgency === 'high' && b.urgency !== 'high') return -1
-      if (b.urgency === 'high' && a.urgency !== 'high') return 1
+      const scoreDiff = sortScore(a) - sortScore(b)
+      if (scoreDiff !== 0) return scoreDiff
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
     .filter(c => filter === 'all' || c.status === filter)
+    .filter(c => !contextFilter || c.context?.name === contextFilter)
 
   if (loading) {
     return (
@@ -360,6 +371,44 @@ export default function AppPage() {
               ))}
             </div>
           </div>
+
+          {/* Context filter row */}
+          {contextOptions.length >= 2 && (
+            <div
+              className="flex gap-1.5 mb-4 overflow-x-auto"
+              style={{ scrollbarWidth: 'none' } as React.CSSProperties}
+            >
+              <button
+                onClick={() => setContextFilter(null)}
+                className="font-mono px-2.5 py-1 rounded-sm text-xs flex-shrink-0 transition-all"
+                style={{
+                  fontSize: '10px',
+                  letterSpacing: '0.08em',
+                  background: 'transparent',
+                  border: contextFilter === null ? '1px solid #c8a050' : '1px solid rgba(255,255,255,0.1)',
+                  color: contextFilter === null ? '#c8a050' : 'rgba(255,255,255,0.35)',
+                }}
+              >
+                ALL
+              </button>
+              {contextOptions.map(name => (
+                <button
+                  key={name}
+                  onClick={() => setContextFilter(contextFilter === name ? null : name)}
+                  className="font-mono px-2.5 py-1 rounded-sm text-xs flex-shrink-0 transition-all"
+                  style={{
+                    fontSize: '10px',
+                    letterSpacing: '0.08em',
+                    background: 'transparent',
+                    border: contextFilter === name ? '1px solid #c8a050' : '1px solid rgba(255,255,255,0.1)',
+                    color: contextFilter === name ? '#c8a050' : 'rgba(255,255,255,0.35)',
+                  }}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
 
           {digestOpen && (
             <WeeklyDigest
