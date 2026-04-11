@@ -3,7 +3,7 @@ import type { Capture, Context, AIInsightResult } from './types'
 const PROXY_URL = 'https://mgxhxilarhtfibjtwpbc.supabase.co/functions/v1/anthropic-proxy'
 const CURA_SECRET = process.env.NEXT_PUBLIC_CURA_SECRET || 'cura-proxy-secret-2026'
 
-async function callClaude(system: string, userMessage: string): Promise<string | null> {
+async function callClaude(system: string, userMessage: string, maxTokens = 400): Promise<string | null> {
   console.log('[callClaude] firing POST to', PROXY_URL, '| secret present:', !!CURA_SECRET)
   try {
     const res = await fetch(PROXY_URL, {
@@ -14,7 +14,7 @@ async function callClaude(system: string, userMessage: string): Promise<string |
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 400,
+        max_tokens: maxTokens,
         system,
         messages: [{ role: 'user', content: userMessage }],
       }),
@@ -90,6 +90,26 @@ Their other open cycles:\n${openItems || 'none yet'}`
     }
   } catch (err) {
     console.error('[processCapture] JSON parse failed:', err, '| raw:', response)
+    return null
+  }
+}
+
+export async function organizeBrainDump(
+  dump: string
+): Promise<{ contexts: { name: string; description: string }[]; captures: { content: string; contextName: string }[] } | null> {
+  const system = `You are organizing someone's brain dump into a personal knowledge system. Extract: 1) The distinct 'worlds' or contexts they're running (projects, relationships, areas of life). 2) Individual captures — specific tasks, worries, ideas, goals. Return ONLY valid JSON, no markdown:
+{
+  "contexts": [{"name": string, "description": string}],
+  "captures": [{"content": string, "contextName": string}]
+}
+Max 8 contexts. Context descriptions should be 1-2 sentences capturing what this world is and what's at stake. Be specific, not generic.`
+
+  const response = await callClaude(system, dump, 2000)
+  if (!response) return null
+  try {
+    const clean = response.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
+    return JSON.parse(clean)
+  } catch {
     return null
   }
 }

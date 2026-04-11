@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { organizeBrainDump } from '@/lib/ai'
 import type { Archetype } from '@/lib/types'
 
 const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
@@ -32,14 +33,27 @@ const ARCHETYPES: Record<Archetype, { label: string; hint: string; contexts: str
 
 const DEV_CONTEXTS = ['Aphrodite', 'Feybl', 'Built to Last', 'Cura', 'Old Town', 'POLLY']
 
+type Step = 'archetype' | 'dump' | 'organizing' | 'contexts'
+
+interface PendingCapture {
+  content: string
+  contextName: string
+}
+
 export default function OnboardingPage() {
   const router = useRouter()
-  const [step, setStep] = useState<'archetype' | 'contexts'>('archetype')
+  const [step, setStep] = useState<Step>('archetype')
   const [selectedArchetype, setSelectedArchetype] = useState<Archetype | null>(null)
   const [contexts, setContexts] = useState<{ name: string; description: string }[]>([])
+  const [pendingCaptures, setPendingCaptures] = useState<PendingCapture[]>([])
+  const [dump, setDump] = useState('')
+  const [isRecording, setIsRecording] = useState(false)
+  const [organizeError, setOrganizeError] = useState(false)
   const [newCtx, setNewCtx] = useState('')
   const [saving, setSaving] = useState(false)
   const [checking, setChecking] = useState(true)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
     async function init() {
@@ -58,7 +72,6 @@ export default function OnboardingPage() {
         return
       }
 
-      // Already done onboarding?
       const { data: profile } = await supabase
         .from('users_profile')
         .select('archetype')
@@ -77,7 +90,57 @@ export default function OnboardingPage() {
 
   function selectArchetype(archetype: Archetype) {
     setSelectedArchetype(archetype)
-    setContexts(ARCHETYPES[archetype].contexts.map(name => ({ name, description: '' })))
+    setStep('dump')
+  }
+
+  function skipToManual() {
+    if (selectedArchetype) {
+      setContexts(ARCHETYPES[selectedArchetype].contexts.map(name => ({ name, description: '' })))
+    }
+    setStep('contexts')
+  }
+
+  function toggleVoice() {
+    if (typeof window === 'undefined') return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) return
+    if (isRecording) {
+      recognitionRef.current?.stop()
+      return
+    }
+    const recognition = new SR()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    recognitionRef.current = recognition
+    const base = dump
+    recognition.onstart = () => setIsRecording(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (e: any) => {
+      let transcript = ''
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript
+      }
+      setDump(base + (base ? ' ' : '') + transcript)
+    }
+    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null }
+    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null }
+    recognition.start()
+  }
+
+  async function handleOrganize() {
+    if (!dump.trim()) return
+    setOrganizeError(false)
+    setStep('organizing')
+    const result = await organizeBrainDump(dump.trim())
+    if (!result || result.contexts.length === 0) {
+      setOrganizeError(true)
+      setStep('dump')
+      return
+    }
+    setContexts(result.contexts)
+    setPendingCaptures(result.captures ?? [])
     setStep('contexts')
   }
 
@@ -111,16 +174,28 @@ export default function OnboardingPage() {
 
     const userId = session.user.id
 
-    // Save profile
     await supabase.from('users_profile').upsert({
       id: userId,
       archetype: selectedArchetype,
     })
 
-    // Save contexts
-    await supabase.from('contexts').insert(
-      contexts.map(c => ({ user_id: userId, name: c.name, description: c.description }))
-    )
+    const { data: savedContexts } = await supabase
+      .from('contexts')
+      .insert(contexts.map(c => ({ user_id: userId, name: c.name, description: c.description })))
+      .select()
+
+    if (savedContexts && pendingCaptures.length > 0) {
+      const ctxMap = new Map((savedContexts as { id: string; name: string }[]).map(c => [c.name, c.id]))
+      await supabase.from('captures').insert(
+        pendingCaptures.map(cap => ({
+          user_id: userId,
+          content: cap.content,
+          context_id: ctxMap.get(cap.contextName) ?? null,
+          status: 'open',
+          urgency: 'normal',
+        }))
+      )
+    }
 
     router.replace('/app')
   }
@@ -139,6 +214,7 @@ export default function OnboardingPage() {
     <div className="h-full overflow-y-auto flex items-center justify-center px-5 py-12">
       <div className="w-full max-w-lg">
 
+        {/* ── ARCHETYPE ── */}
         {step === 'archetype' && (
           <div style={{ animation: 'slideIn 0.25s ease' }}>
             <h2 className="font-display text-3xl tracking-widest mb-2" style={{ color: 'var(--accent)' }}>
@@ -169,14 +245,104 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {/* ── BRAIN DUMP ── */}
+        {step === 'dump' && (
+          <div style={{ animation: 'slideIn 0.25s ease' }}>
+            <h2 className="font-display text-3xl tracking-widest mb-2" style={{ color: 'var(--accent)' }}>
+              WHAT'S ON YOUR MIND?
+            </h2>
+            <p className="font-mono text-xs mb-6" style={{ color: 'var(--muted)' }}>
+              // projects, goals, worries, dreams, things undone — all of it. the more you give, the sharper cura gets.
+            </p>
+
+            {organizeError && (
+              <p className="font-mono text-xs mb-4" style={{ color: 'var(--warn)' }}>
+                // couldn't parse that — try again or add more detail.
+              </p>
+            )}
+
+            <div className="rounded-sm border p-4 mb-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <textarea
+                rows={6}
+                placeholder="Start talking or typing. Don't filter. Go."
+                value={dump}
+                onChange={e => setDump(e.target.value)}
+                className="resize-none bg-transparent border-none p-0 text-base leading-relaxed"
+                style={{ fontSize: '16px', lineHeight: '1.7', minHeight: '144px' }}
+                autoFocus
+              />
+            </div>
+
+            <button
+              onClick={toggleVoice}
+              className="w-full font-mono text-sm py-3 rounded-sm border mb-3 transition-all"
+              style={{
+                background: 'transparent',
+                borderColor: isRecording ? 'var(--warn)' : 'var(--border)',
+                color: isRecording ? 'var(--warn)' : 'var(--muted)',
+                letterSpacing: '0.08em',
+                animation: isRecording ? 'micPulse 1s infinite' : 'none',
+              }}
+            >
+              {isRecording ? '🎙 RECORDING — TAP TO STOP' : '🎙 SPEAK INSTEAD'}
+            </button>
+
+            <button
+              onClick={handleOrganize}
+              disabled={!dump.trim()}
+              className="w-full font-display text-lg tracking-widest py-3 rounded-sm transition-all disabled:opacity-40 mb-3"
+              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
+            >
+              ORGANIZE IT →
+            </button>
+
+            <p className="font-mono text-xs text-center mb-6" style={{ color: 'var(--muted)', opacity: 0.5 }}>
+              // takes about 10 seconds
+            </p>
+
+            <div className="text-center">
+              <button
+                onClick={skipToManual}
+                className="font-mono text-xs transition-colors"
+                style={{ color: 'var(--muted)', opacity: 0.5 }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+              >
+                // skip — I'll add manually
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── ORGANIZING ── */}
+        {step === 'organizing' && (
+          <div className="text-center py-16" style={{ animation: 'slideIn 0.25s ease' }}>
+            <div
+              className="font-mono text-sm mb-4"
+              style={{ color: 'var(--muted)', animation: 'micPulse 1.5s infinite', letterSpacing: '0.1em' }}
+            >
+              // reading your mind...
+            </div>
+            <div className="font-display text-5xl tracking-widest" style={{ color: 'var(--accent)', opacity: 0.15 }}>
+              CURA
+            </div>
+          </div>
+        )}
+
+        {/* ── CONFIRM CONTEXTS ── */}
         {step === 'contexts' && (
           <div style={{ animation: 'slideIn 0.25s ease' }}>
             <h2 className="font-display text-3xl tracking-widest mb-2" style={{ color: 'var(--accent)' }}>
-              YOUR CONTEXTS
+              YOUR WORLDS
             </h2>
-            <p className="font-mono text-xs mb-8" style={{ color: 'var(--muted)' }}>
-              // what worlds are you running right now? edit, remove, or add your own.
+            <p className="font-mono text-xs mb-2" style={{ color: 'var(--muted)' }}>
+              // cura found these contexts. edit, remove, or add your own.
             </p>
+            {pendingCaptures.length > 0 && (
+              <p className="font-mono text-xs mb-6" style={{ color: 'var(--open)' }}>
+                // found {pendingCaptures.length} open cycle{pendingCaptures.length !== 1 ? 's' : ''} — they'll be waiting in your feed
+              </p>
+            )}
 
             <div className="space-y-2 mb-4">
               {contexts.map(ctx => (
@@ -207,7 +373,7 @@ export default function OnboardingPage() {
               ))}
             </div>
 
-            <div className="flex gap-2 mb-8">
+            <div className="flex gap-2 mb-6">
               <input
                 type="text"
                 placeholder="Add a context..."
@@ -229,7 +395,7 @@ export default function OnboardingPage() {
             <div className="flex gap-3">
               {!DEV_MODE && (
                 <button
-                  onClick={() => setStep('archetype')}
+                  onClick={() => setStep('dump')}
                   className="font-display text-sm tracking-widest px-4 py-3 rounded-sm"
                   style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)' }}
                 >
@@ -242,11 +408,12 @@ export default function OnboardingPage() {
                 className="flex-1 font-display text-lg tracking-widest py-3 rounded-sm transition-all disabled:opacity-40"
                 style={{ background: 'var(--accent)', color: 'var(--bg)' }}
               >
-                {saving ? 'SAVING...' : 'START →'}
+                {saving ? 'SAVING...' : 'LOOKS RIGHT →'}
               </button>
             </div>
           </div>
         )}
+
       </div>
     </div>
   )
