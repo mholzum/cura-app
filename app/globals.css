@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:wght@400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg: #0a0a0a;
+  --bg: #080502;
   --surface: #141412;
   --surface2: #1e1c1a;
   --border: #2a2825;
@@ -19,8 +19,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  background: var(--bg);
+html {
+  background: radial-gradient(ellipse at 38% 32%, #1e1508 0%, #080502 100%);
+  min-height: 100vh;
+}
+
+body {
+  background: transparent;
   color: var(--text);
   font-family: 'Libre Baskerville', serif;
   min-height: 100%;

@@ -1,5 +1,7 @@
 'use client'
 
+import { LogoHeader } from './Logo'
+
 interface HeaderProps {
   openCount: number
   closedCount: number
@@ -26,16 +28,7 @@ export default function Header({
         className="flex items-center justify-between px-4"
         style={{ paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '10px' }}
       >
-        <svg width="110" height="36" viewBox="0 0 160 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0"  y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#c9a84c" opacity="0.5">C</text>
-          <text x="31" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#e8e4de" opacity="0.58">U</text>
-          <text x="62" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#e8e4de" opacity="0.78">R</text>
-          <text x="91" y="46" fontFamily="Bebas Neue, sans-serif" fontSize="52" fill="#7a9eb5" opacity="1">A</text>
-          <line x1="2"  y1="50" x2="26"  y2="50" stroke="#c9a84c" strokeWidth="1"   opacity="0.35"/>
-          <line x1="31" y1="50" x2="58"  y2="50" stroke="#e8e4de" strokeWidth="1.2" opacity="0.36"/>
-          <line x1="62" y1="50" x2="88"  y2="50" stroke="#e8e4de" strokeWidth="1.5" opacity="0.58"/>
-          <line x1="91" y1="50" x2="128" y2="50" stroke="#7a9eb5" strokeWidth="2.5" opacity="1"/>
-        </svg>
+        <LogoHeader />
 
         <div className="text-right">
           <div className="font-mono" style={{ color: 'var(--muted)', fontSize: '9px', letterSpacing: '0.05em' }}>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { organizeBrainDump } from '@/lib/ai'
+import { LogoCenter } from '@/components/Logo'
 import type { Archetype } from '@/lib/types'
 
 const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
@@ -203,9 +204,7 @@ export default function OnboardingPage() {
   if (checking) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
-          CURA
-        </div>
+        <LogoCenter />
       </div>
     )
   }
@@ -317,14 +316,14 @@ export default function OnboardingPage() {
         {/* ── ORGANIZING ── */}
         {step === 'organizing' && (
           <div className="text-center py-16" style={{ animation: 'slideIn 0.25s ease' }}>
+            <div className="flex justify-center mb-8" style={{ opacity: 0.6 }}>
+              <LogoCenter />
+            </div>
             <div
-              className="font-mono text-sm mb-4"
+              className="font-mono text-sm"
               style={{ color: 'var(--muted)', animation: 'micPulse 1.5s infinite', letterSpacing: '0.1em' }}
             >
               // reading your mind...
-            </div>
-            <div className="font-display text-5xl tracking-widest" style={{ color: 'var(--accent)', opacity: 0.15 }}>
-              CURA
             </div>
           </div>
         )}

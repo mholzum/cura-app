@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { LogoCenter } from '@/components/Logo'
 import { processCapture, generateDigest, generateSmartPush, generateClosePush } from '@/lib/ai'
 import type { Capture, Context } from '@/lib/types'
 import Header from '@/components/Header'
@@ -287,9 +288,7 @@ export default function AppPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="font-display text-2xl tracking-widest" style={{ color: 'var(--muted)' }}>
-          CURA
-        </div>
+        <LogoCenter />
       </div>
     )
   }
