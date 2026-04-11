@@ -6,19 +6,21 @@ const orbCore = 'radial-gradient(circle at 50% 50%, #ffffff 0%, #fffbf0 20%, rgb
 
 export function LogoHeader() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', background: 'transparent' }}>
       <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0, overflow: 'visible', background: 'transparent' }}>
         {/* Outer bloom — absolutely positioned, never affects layout */}
         <div style={{
           position: 'absolute',
           inset: '-14px',
           background: 'radial-gradient(circle, rgba(200,128,32,0.22) 0%, rgba(192,112,24,0.07) 55%, transparent 100%)',
+          backgroundColor: 'transparent',
         }} />
         {/* Core — no border-radius so gradient dissolves without a hard circular clip */}
         <div style={{
           position: 'absolute',
           inset: 0,
           background: orbCore,
+          backgroundColor: 'transparent',
         }} />
       </div>
       <span style={{

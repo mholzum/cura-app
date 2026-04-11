@@ -21,7 +21,7 @@ export default function Header({
   return (
     <div
       className="border-b flex-shrink-0"
-      style={{ borderColor: 'var(--border)', background: 'transparent', overflow: 'visible' }}
+      style={{ borderColor: 'var(--border)', background: 'rgba(18,10,4,0.7)', backdropFilter: 'blur(0px)', overflow: 'visible' }}
     >
       {/* Row 1: logo + score */}
       <div
