@@ -7,7 +7,7 @@ const orbCore = 'radial-gradient(circle at 50% 50%, #ffffff 0%, #fffbf0 20%, rgb
 export function LogoHeader() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-      <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0, overflow: 'visible' }}>
+      <div style={{ position: 'relative', width: '40px', height: '40px', flexShrink: 0, overflow: 'visible', background: 'transparent' }}>
         {/* Outer bloom — absolutely positioned, never affects layout */}
         <div style={{
           position: 'absolute',

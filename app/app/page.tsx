@@ -373,7 +373,7 @@ export default function AppPage() {
           </div>
 
           {/* Context filter row */}
-          {contextOptions.length >= 2 && (
+          {contextOptions.length >= 1 && (
             <div
               className="flex gap-1.5 mb-4 overflow-x-auto"
               style={{ scrollbarWidth: 'none' } as React.CSSProperties}

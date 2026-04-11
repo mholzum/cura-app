@@ -26,7 +26,7 @@ export default function Header({
       {/* Row 1: logo + score */}
       <div
         className="flex items-center justify-between px-4"
-        style={{ paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '10px' }}
+        style={{ paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '10px', overflow: 'visible' }}
       >
         <LogoHeader />
 
