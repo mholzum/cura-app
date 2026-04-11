@@ -18,6 +18,7 @@ export interface Capture {
   urgency: 'high' | 'normal' | 'low'
   created_at: string
   closed_at: string | null
+  due_date: string | null
   screenshot?: string | null
   // joined
   context?: Context

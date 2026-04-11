@@ -7,7 +7,13 @@ interface CaptureBoxProps {
   contexts: Context[]
   activeContextId: string | null
   onSetActiveContext: (id: string) => void
-  onCapture: (content: string, screenshot: string | null) => void
+  onCapture: (content: string, screenshot: string | null, dueDate: string | null) => void
+}
+
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${months[d.getMonth()]} ${d.getDate()}`
 }
 
 export default function CaptureBox({
@@ -18,6 +24,7 @@ export default function CaptureBox({
 }: CaptureBoxProps) {
   const [text, setText] = useState('')
   const [screenshot, setScreenshot] = useState<string | null>(null)
+  const [dueDate, setDueDate] = useState<string | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
@@ -29,9 +36,11 @@ export default function CaptureBox({
 
   function handleCapture() {
     if (!text.trim() && !screenshot) return
-    onCapture(text.trim(), screenshot)
+    const isoDate = dueDate ? new Date(dueDate + 'T00:00:00').toISOString() : null
+    onCapture(text.trim(), screenshot, isoDate)
     setText('')
     setScreenshot(null)
+    setDueDate(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -134,6 +143,39 @@ export default function CaptureBox({
 
           {/* Actions */}
           <div className="flex gap-2 items-center">
+            {/* Due date */}
+            {dueDate ? (
+              <span
+                className="font-mono flex items-center gap-1 px-2.5 py-1.5 rounded-sm border text-xs"
+                style={{ fontSize: '10px', letterSpacing: '0.06em', background: 'rgba(200,160,80,0.08)', borderColor: 'rgba(200,160,80,0.3)', color: '#c8a050' }}
+              >
+                Due {formatShortDate(dueDate)}
+                <button
+                  onClick={() => setDueDate(null)}
+                  className="leading-none ml-0.5"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  ×
+                </button>
+              </span>
+            ) : (
+              <label
+                htmlFor="due-date-input"
+                className="cursor-pointer rounded-sm border px-2.5 py-1.5 text-base leading-none transition-all"
+                style={{ background: 'transparent', borderColor: 'var(--border)', color: 'var(--muted)' }}
+                title="Set due date"
+              >
+                📅
+              </label>
+            )}
+            <input
+              id="due-date-input"
+              type="date"
+              className="hidden"
+              value={dueDate ?? ''}
+              onChange={e => setDueDate(e.target.value || null)}
+            />
+
             <label
               htmlFor="file-upload"
               className="cursor-pointer rounded-sm border px-2.5 py-1.5 text-base leading-none transition-all"

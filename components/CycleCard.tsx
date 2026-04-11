@@ -2,6 +2,28 @@
 
 import type { Capture } from '@/lib/types'
 
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function isToday(date: Date): boolean {
+  const today = new Date()
+  return date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+}
+
+function formatDueDate(isoString: string, status: string): { label: string; color: string } {
+  const due = new Date(isoString)
+  const today = isToday(due)
+  const overdue = due < new Date() && !today && status !== 'closed'
+  const label = today
+    ? 'Due today'
+    : overdue
+      ? `Due ${MONTHS[due.getMonth()]} ${due.getDate()} ↑`
+      : `Due ${MONTHS[due.getMonth()]} ${due.getDate()}`
+  const color = overdue ? '#c84030' : today ? '#e8820a' : 'rgba(255,255,255,0.3)'
+  return { label, color }
+}
+
 function formatAge(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime()
   const m = Math.floor(diff / 60000)
@@ -148,6 +170,14 @@ export default function CycleCard({ capture, onClose, onDelete }: CycleCardProps
             HIGH
           </span>
         )}
+        {capture.due_date && (() => {
+          const { label, color } = formatDueDate(capture.due_date, capture.status)
+          return (
+            <span className="font-mono text-xs" style={{ color, fontSize: '10px', letterSpacing: '0.05em' }}>
+              {label}
+            </span>
+          )
+        })()}
       </div>
     </div>
   )

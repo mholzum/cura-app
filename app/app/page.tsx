@@ -120,7 +120,7 @@ export default function AppPage() {
   }
 
   // ── Capture ───────────────────────────────────────────────
-  async function handleCapture(content: string, screenshot: string | null) {
+  async function handleCapture(content: string, screenshot: string | null, dueDate: string | null = null) {
     if (!content && !screenshot) return
 
     const contextId = activeContextId
@@ -139,6 +139,7 @@ export default function AppPage() {
       urgency: 'normal',
       created_at: now,
       closed_at: null,
+      due_date: dueDate,
       context: context ?? undefined,
       ...(screenshot ? { screenshot } : {}),
     }
@@ -149,7 +150,7 @@ export default function AppPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('captures')
-        .insert({ user_id: userId, content, context_id: contextId, status: 'open', urgency: 'normal' })
+        .insert({ user_id: userId, content, context_id: contextId, status: 'open', urgency: 'normal', due_date: dueDate })
         .select('*, context:contexts(*)')
         .single()
 
@@ -280,11 +281,25 @@ export default function AppPage() {
     captures.filter(c => c.context).map(c => c.context!.name)
   ))
 
+  const now = new Date()
+  const isToday = (date: Date) => {
+    const today = new Date()
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+  }
+  const isOverdue = (c: Capture) =>
+    !!c.due_date && new Date(c.due_date) < now && c.status === 'open'
+  const isDueToday = (c: Capture) =>
+    !!c.due_date && isToday(new Date(c.due_date)) && c.status === 'open'
+
   const sortScore = (c: Capture) => {
-    if (c.status === 'open' && c.urgency === 'high') return 0
-    if (c.status === 'stale') return 1
-    if (c.status === 'open') return 2
-    return 3
+    if (isOverdue(c))                                return 0
+    if (isDueToday(c))                               return 1
+    if (c.status === 'open' && c.urgency === 'high') return 2
+    if (c.status === 'stale')                        return 3
+    if (c.status === 'open')                         return 4
+    return 5
   }
 
   const filtered = [...captures]
